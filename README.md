@@ -39,7 +39,7 @@ vercel dev                   # http://localhost:3000
 
 ```bash
 curl http://localhost:3000/health
-# {"status":"ok"}
+# {"status":"ok","geminiConfigured":true}
 ```
 
 Útil para monitoreo.
@@ -74,6 +74,7 @@ curl -X POST http://localhost:3000/chat \
 | 200 | Respuesta del asistente |
 | 400 | Body inválido (falta `message`, excede 2000 caracteres, JSON malformado) |
 | 502 | Error de Gemini (key inválida, cuota, caída del servicio) |
+| 503 | Falta `GEMINI_API_KEY` en el servidor (confírmalo en `/health` con `geminiConfigured`) |
 | 404 | Ruta inexistente |
 
 ## Uso desde la app Expo

@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { chat } from '../services/gemini';
+import { config } from '../config.js';
+import { chat, GeminiKeyMissingError } from '../services/gemini.js';
 
 const MAX_MESSAGE_LENGTH = 2000;
 
 export const chatRouter = Router();
 
 chatRouter.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', geminiConfigured: Boolean(config.geminiApiKey) });
 });
 
 chatRouter.post('/chat', async (req, res) => {
@@ -41,6 +42,15 @@ chatRouter.post('/chat', async (req, res) => {
     const result = await chat(message.trim(), previousInteractionId);
     res.json(result);
   } catch (error) {
+    if (error instanceof GeminiKeyMissingError) {
+      console.error('[chat] GEMINI_API_KEY no configurada en el servidor');
+      res.status(503).json({
+        error: 'GEMINI_NOT_CONFIGURED',
+        message: 'Falta configurar GEMINI_API_KEY en las variables de entorno del servidor.',
+      });
+      return;
+    }
+
     console.error('[chat] Error al llamar a Gemini:', error);
     res.status(502).json({
       error: 'GEMINI_ERROR',

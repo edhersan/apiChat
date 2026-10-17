@@ -1,8 +1,24 @@
 import { GoogleGenAI } from '@google/genai';
-import { config } from '../config';
-import { SYSTEM_PROMPT } from '../prompt/systemPrompt';
+import { config } from '../config.js';
+import { SYSTEM_PROMPT } from '../prompt/systemPrompt.js';
 
-const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+export class GeminiKeyMissingError extends Error {
+  constructor() {
+    super('GEMINI_KEY_MISSING');
+    this.name = 'GeminiKeyMissingError';
+  }
+}
+
+let client: GoogleGenAI | undefined;
+
+function getClient(): GoogleGenAI {
+  if (!config.geminiApiKey) {
+    throw new GeminiKeyMissingError();
+  }
+
+  client ??= new GoogleGenAI({ apiKey: config.geminiApiKey });
+  return client;
+}
 
 export interface ChatResult {
   reply: string;
@@ -10,6 +26,8 @@ export interface ChatResult {
 }
 
 export async function chat(message: string, previousInteractionId?: string): Promise<ChatResult> {
+  const ai = getClient();
+
   const interaction = await ai.interactions.create({
     model: config.geminiModel,
     input: message,

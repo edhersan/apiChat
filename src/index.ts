@@ -1,8 +1,8 @@
 import cors from 'cors';
 import express from 'express';
 import type { ErrorRequestHandler } from 'express';
-import { config } from './config';
-import { chatRouter } from './routes/chat';
+import { config } from './config.js';
+import { chatRouter } from './routes/chat.js';
 
 const app = express();
 
@@ -11,6 +11,21 @@ const corsOrigin =
 
 app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: '32kb' }));
+
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'API Chat — Pokedex Expo',
+    endpoints: {
+      health: 'GET /health',
+      chat: 'POST /chat',
+    },
+  });
+});
+
+app.get('/favicon.ico', (_req, res) => {
+  res.status(204).end();
+});
+
 app.use(chatRouter);
 
 app.use((_req, res) => {
