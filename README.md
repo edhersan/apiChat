@@ -10,7 +10,7 @@ Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo, sin 
 
 - Modelo: `gemini-3.5-flash-lite` (configurable con `GEMINI_MODEL`)
 - SDK: `@google/genai` (Interactions API) — la conversación se hila con `previous_interaction_id`, así que la API no guarda estado
-- Autenticación: header `X-API-Key` compartido con la app
+- Sin autenticación: API abierta (proyecto académico); la key de Gemini vive solo en el servidor
 
 ## Requisitos
 
@@ -21,8 +21,7 @@ Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo, sin 
 
 ```bash
 npm install
-cp .env.example .env.local   # completa GEMINI_API_KEY y genera APP_API_KEY:
-openssl rand -hex 32         # pega el resultado como APP_API_KEY
+cp .env.example .env.local   # completa GEMINI_API_KEY (https://aistudio.google.com/apikey)
 npm run dev                  # http://localhost:3000
 ```
 
@@ -43,14 +42,13 @@ curl http://localhost:3000/health
 # {"status":"ok"}
 ```
 
-Sin autenticación. Útil para monitoreo.
+Útil para monitoreo.
 
 ### `POST /chat`
 
 ```bash
 curl -X POST http://localhost:3000/chat \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: TU_APP_API_KEY" \
   -d '{"message":"¿Qué sabes de Pikachu?"}'
 ```
 
@@ -68,7 +66,6 @@ Para continuar la conversación, envía el `interactionId` recibido como `previo
 ```bash
 curl -X POST http://localhost:3000/chat \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: TU_APP_API_KEY" \
   -d '{"message":"¿Y sus evoluciones?","previousInteractionId":"v1_..."}'
 ```
 
@@ -76,7 +73,6 @@ curl -X POST http://localhost:3000/chat \
 | --- | --- |
 | 200 | Respuesta del asistente |
 | 400 | Body inválido (falta `message`, excede 2000 caracteres, JSON malformado) |
-| 401 | `X-API-Key` ausente o incorrecta |
 | 502 | Error de Gemini (key inválida, cuota, caída del servicio) |
 | 404 | Ruta inexistente |
 
@@ -84,14 +80,12 @@ curl -X POST http://localhost:3000/chat \
 
 ```ts
 const API_CHAT_URL = 'https://TU-PROYECTO.vercel.app';
-const API_CHAT_KEY = 'TU_APP_API_KEY';
 
 export async function enviarMensaje(message: string, previousInteractionId?: string) {
   const response = await fetch(`${API_CHAT_URL}/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': API_CHAT_KEY,
     },
     body: JSON.stringify({ message, previousInteractionId }),
   });
@@ -128,7 +122,6 @@ Vercel detecta Express automáticamente (zero-config): el archivo `src/index.ts`
    | Variable | Valor |
    | --- | --- |
    | `GEMINI_API_KEY` | tu key de AI Studio |
-   | `APP_API_KEY` | la misma que usarás en la app Expo (`openssl rand -hex 32`) |
    | `CORS_ORIGIN` | `*` o tu(s) origen(es) separados por coma |
 
 4. Deploy. Cada push a `main` republica producción automáticamente; los PRs generan preview deployments.
@@ -136,5 +129,5 @@ Vercel detecta Express automáticamente (zero-config): el archivo `src/index.ts`
 ## Notas
 
 - **CORS**: en la app nativa (Android/iOS) no aplica; en web sí. Ajusta `CORS_ORIGIN` cuando tengas el dominio final.
-- **Seguridad de la key de la app**: `APP_API_KEY` viaja dentro del bundle de la app (cualquiera puede extraerla). Es aceptable para este caso; si necesitas auth real por usuario habría que agregar login + rate limiting con un store externo.
+- **API abierta**: sin autenticación por ser un proyecto académico. La `GEMINI_API_KEY` vive solo en el servidor; si el proyecto crece, considera agregar auth y rate limiting.
 - **`GEMINI_MODEL`**: puedes cambiar de modelo sin tocar código (ej. `gemini-3.8-flash` si algún día quieres más capacidad).

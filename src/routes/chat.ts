@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { requireApiKey } from '../middleware/auth';
 import { chat } from '../services/gemini';
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -10,7 +9,7 @@ chatRouter.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-chatRouter.post('/chat', requireApiKey, async (req, res) => {
+chatRouter.post('/chat', async (req, res) => {
   const body = (req.body ?? {}) as { message?: unknown; previousInteractionId?: unknown };
   const { message, previousInteractionId } = body;
 

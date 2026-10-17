@@ -16,7 +16,6 @@ function required(name: string): string {
 
 export const config = {
   geminiApiKey: required('GEMINI_API_KEY'),
-  appApiKey: required('APP_API_KEY'),
   geminiModel: process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash-lite',
   corsOrigin: process.env.CORS_ORIGIN?.trim() || '*',
   port: Number(process.env.PORT) || 3000,
