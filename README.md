@@ -11,6 +11,7 @@ Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo, sin 
 - Modelo: `gemini-3.5-flash-lite` (configurable con `GEMINI_MODEL`)
 - SDK: `@google/genai` (Interactions API) — la conversación se hila con `previous_interaction_id`, así que la API no guarda estado
 - Sin autenticación: API abierta (proyecto académico); la key de Gemini vive solo en el servidor
+- Documentación interactiva: Swagger UI en `/docs` (spec OpenAPI en `/openapi.json`)
 
 ## Requisitos
 
@@ -76,6 +77,14 @@ curl -X POST http://localhost:3000/chat \
 | 502 | Error de Gemini (key inválida, cuota, caída del servicio) |
 | 503 | Falta `GEMINI_API_KEY` en el servidor (confírmalo en `/health` con `geminiConfigured`) |
 | 404 | Ruta inexistente |
+
+### `GET /docs`
+
+Documentación interactiva (Swagger UI) generada desde la spec OpenAPI. Incluye botón **Try it out** para probar `POST /chat` desde el navegador.
+
+```bash
+curl http://localhost:3000/openapi.json   # la spec en JSON
+```
 
 ## Uso desde la app Expo
 

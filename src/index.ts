@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import type { ErrorRequestHandler } from 'express';
 import { config } from './config.js';
+import { docsHtml, openapiSpec } from './openapi.js';
 import { chatRouter } from './routes/chat.js';
 
 const app = express();
@@ -16,10 +17,20 @@ app.get('/', (_req, res) => {
   res.json({
     name: 'API Chat — Pokedex Expo',
     endpoints: {
+      docs: 'GET /docs',
+      openapi: 'GET /openapi.json',
       health: 'GET /health',
       chat: 'POST /chat',
     },
   });
+});
+
+app.get('/docs', (_req, res) => {
+  res.type('html').send(docsHtml);
+});
+
+app.get('/openapi.json', (_req, res) => {
+  res.json(openapiSpec);
 });
 
 app.get('/favicon.ico', (_req, res) => {
