@@ -1,12 +1,19 @@
 # API Chat — Pokedex Expo
 
-API Express + TypeScript que envuelve la API de Gemini con un **prompt limitador**: el asistente solo responde sobre los tres temas de la app Pokedex Expo:
+API Express + TypeScript que envuelve la API de Gemini con **grounding por function calling**: el asistente solo responde sobre los tres temas de la app Pokedex Expo, y solo con los registros que existen en las bases de datos de las otras APIs:
 
-1. **Pokémon** (Pokédex e Info Pokémon)
-2. **Videojuegos** (Juegos e Info Juego)
-3. **Profesores** (directorio de docentes)
+1. **Pokémon** (Pokédex e Info Pokémon) — `pokemon-api` (TiDB)
+2. **Videojuegos** (Juegos e Info Juego) — `games-api` (MongoDB)
+3. **Profesores** (directorio de docentes) — `docentes-api` (MySQL)
 
-Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo, sin importar cómo se pida (incluye instrucciones para cambiar de rol).
+Cómo funciona el límite a los registros reales:
+
+- En cada mensaje el servidor carga un índice de los registros existentes (cacheado ~5 min) y lo inyecta en el system prompt.
+- El modelo cuenta con herramientas (`listar_pokemon`, `buscar_pokemon`, `listar_juegos`, `buscar_juego`, `listar_profesores`, `buscar_profesor`) que el servidor ejecuta contra las tres APIs; el modelo solo puede afirmar datos que provengan de esas consultas.
+- Si el usuario pide un Pokémon, juego o profesor que no está en las bases de datos (p. ej. Charizard), el asistente lo niega y sugiere los que sí existen.
+- Si una de las APIs de datos está caída, el asistente lo indica y pide reintentar.
+
+Cualquier mensaje fuera de esos tres temas recibe una respuesta fija de rechazo, sin importar cómo se pida (incluye instrucciones para cambiar de rol).
 
 - Modelo: `gemini-3.5-flash-lite` (configurable con `GEMINI_MODEL`)
 - SDK: `@google/genai` (Interactions API) — la conversación se hila con `previous_interaction_id`, así que la API no guarda estado
@@ -134,10 +141,22 @@ Vercel detecta Express automáticamente (zero-config): el archivo `src/index.ts`
    | `GEMINI_API_KEY` | tu key de AI Studio |
    | `CORS_ORIGIN` | `*` o tu(s) origen(es) separados por coma |
 
+   Opcionales (tienen valores por defecto):
+
+   | Variable | Default |
+   | --- | --- |
+   | `POKEMON_API_URL` | `https://pokemon-api-edhersan.vercel.app` |
+   | `GAMES_API_URL` | `https://games-api-iota.vercel.app` |
+   | `PROFESORES_API_URL` | `https://docentes-api.vercel.app` |
+   | `DATA_API_TIMEOUT_MS` | `8000` |
+   | `CATALOG_INDEX_TTL_MS` | `300000` |
+
 4. Deploy. Cada push a `main` republica producción automáticamente; los PRs generan preview deployments.
 
 ## Notas
 
 - **CORS**: en la app nativa (Android/iOS) no aplica; en web sí. Ajusta `CORS_ORIGIN` cuando tengas el dominio final.
 - **API abierta**: sin autenticación por ser un proyecto académico. La `GEMINI_API_KEY` vive solo en el servidor; si el proyecto crece, considera agregar auth y rate limiting.
-- **`GEMINI_MODEL`**: puedes cambiar de modelo sin tocar código (ej. `gemini-3.8-flash` si algún día quieres más capacidad).
+- **`GEMINI_MODEL`**: puedes cambiar de modelo sin tocar código (ej. `gemini-3.8-flash` si algún día quieres más capacidad). El modelo debe soportar **function calling**, porque el asistente consulta las APIs de datos con herramientas.
+- **APIs de datos**: las URLs por defecto apuntan a los despliegues actuales de `pokemon-api`, `games-api` y `docentes-api`; cámbialas con las variables de entorno si mueves esos proyectos.
+- **Índice de catálogo**: se cachea en memoria ~5 min (por instancia). Si una API falla, esa sección queda marcada como no disponible y se reintenta ~30 s después; el asistente no inventa registros de esa sección.

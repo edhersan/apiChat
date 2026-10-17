@@ -4,7 +4,7 @@ export const openapiSpec = {
     title: 'API Chat — Pokedex Expo',
     version: '1.0.0',
     description:
-      'API de chat con Gemini limitada a los temas de la app Pokedex Expo: Pokémon, videojuegos y profesores. Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo. La conversación se hila enviando el interactionId de cada respuesta como previousInteractionId en el siguiente mensaje.',
+      'API de chat con Gemini limitada a los temas de la app Pokedex Expo: Pokémon, videojuegos y profesores. El asistente solo responde con los registros reales de las bases de datos de las APIs de Pokémon, juegos y docentes: consulta esas APIs mediante herramientas antes de responder, y si un registro no existe en la app lo indica en lugar de inventarlo. Cualquier mensaje fuera de esos temas recibe una respuesta fija de rechazo. La conversación se hila enviando el interactionId de cada respuesta como previousInteractionId en el siguiente mensaje.',
   },
   paths: {
     '/': {
@@ -39,7 +39,7 @@ export const openapiSpec = {
       post: {
         summary: 'Enviar un mensaje al asistente',
         description:
-          'El asistente solo responde sobre Pokémon, videojuegos del catálogo de la app y el directorio de profesores. Para continuar una conversación, envía el interactionId recibido como previousInteractionId.',
+          'El asistente solo responde sobre los Pokémon, videojuegos y profesores registrados en las bases de datos de la app; verifica cada registro con las herramientas antes de responder. Para continuar una conversación, envía el interactionId recibido como previousInteractionId.',
         requestBody: {
           required: true,
           content: {
@@ -56,7 +56,7 @@ export const openapiSpec = {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ChatResponse' },
                 example: {
-                  reply: 'Pikachu es el Pokémon ratón de tipo eléctrico, conocido por sus mejillas que almacenan electricidad. Es la mascota de la franquicia y evoluciona a Raichu con una piedra trueno.',
+                  reply: 'En la app, Pikachu (ID 25) mide 0.4 m y pesa 6 kg. Sus movimientos registrados son: swift, thunder-shock y thunderbolt.',
                   interactionId: 'v1_ChdPU0F4YWFtNkFwS2kxZThQZ05lbXdROBIXT1NBeGFhbTZBcEtpMWU4UGdOZW13UTg',
                 },
               },
